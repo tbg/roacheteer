@@ -1,0 +1,11 @@
+{
+  "name": "roacheteer",
+  "version": "0.0.1",
+  "description": "Save the CockroachDB admin UI to PDFs",
+  "main": "index.js",
+  "author": "Tobias Schottdorf",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "puppeteer": "^0.10.1"
+  }
+}
