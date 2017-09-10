@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#
+# This script wraps "go tool pprof" (and stunnel) to work better with
+# HTTPS servers using untrusted certificates (like cockroachdb).
+#
+# Go 1.8 introduced the "https+insecure" option to ignore certificate
+# validation errors, but it did not extend to the symbolizer
+# (https://github.com/google/pprof/issues/94). In go 1.9, this script
+# should be obsolete.
+
+set -xeuo pipefail
+
+server=$1
+url=$2
+
+if [ -z "${server}" ]; then
+  echo "run with: $0 securehost:port /path/to/screenshot"
+  exit 1
+fi
+
+port=8089
+
+pidfile=$(mktemp /tmp/pprof.XXXXXX)
+stunnel -fd 0 <<EOF
+pid=${pidfile}
+[http]
+client = yes
+accept = 127.0.0.1:${port}
+connect = $server
+EOF
+
+cleanup() {
+    kill "$(cat ${pidfile})"
+    # stunnel cleans up its own pidfile on exit
+}
+
+trap cleanup EXIT
+
+node ./index.js "http://localhost:${port}" "${url}"
+
+open out.png
